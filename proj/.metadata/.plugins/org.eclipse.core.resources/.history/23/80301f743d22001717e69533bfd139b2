@@ -1,0 +1,90 @@
+package CS6348FinalProject.proj;
+import javax.crypto.*;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+
+import java.io.*;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.security.*;
+import java.util.Arrays;
+import java.util.Base64;
+
+public class AESEncryption {
+	
+	public static final String CIPHER_ALGORITHM = "AES/CBC/PKCS7Padding";
+	public static final String KEY_ALGORITHM = "AES";  
+	
+	//generate key for encryption
+	//return the key for encryption
+	public static SecretKey generateKey() throws NoSuchAlgorithmException, IOException
+	{
+	    KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
+	    keyGenerator.init(128); 
+	    SecretKey key = keyGenerator.generateKey();
+	    return key;
+	}
+	
+	//convert to byte string for store in the file
+	//return string that is able to restore to SecretKey
+	public static String saveKey(SecretKey sk) throws UnsupportedEncodingException
+	{
+		String store_key = Base64.getEncoder().encodeToString(sk.getEncoded());
+		System.out.println(store_key);
+		
+		return store_key;
+	}
+	
+	//restore key
+	//return secret key for encryption
+	public static SecretKey restoreKey(String store_key) throws UnsupportedEncodingException
+	{
+		byte[] decodedKey = Base64.getDecoder().decode(store_key);
+		SecretKey key_restore = new SecretKeySpec(decodedKey, 0, decodedKey.length, "AES");
+		System.out.println(key_restore);
+		
+		return key_restore;
+	}
+	
+	//get iv
+	//return iv value
+	public IvParameterSpec get_iv()
+	{
+		 int ivSize = 16;
+	     byte[] iv = new byte[ivSize];
+	     SecureRandom random = new SecureRandom();
+	     random.nextBytes(iv);
+	     IvParameterSpec ivParameterSpec = new IvParameterSpec(iv);
+	     return ivParameterSpec;
+	}
+	
+    //convert to secret key format 
+    public static Key convertToKey(byte[] keyBytes) throws Exception{  
+        SecretKey secretKey = new SecretKeySpec(keyBytes,KEY_ALGORITHM);  
+        return secretKey;  
+    }  
+	
+	
+	//encrypt file with CBC mode
+	public byte[] doEnc(String strToEncrypt, SecretKey secretKey, IvParameterSpec iv) throws Exception
+	{
+		byte[] str_bytes = strToEncrypt.getBytes();
+		
+		//convert key  
+        Key key = convertToKey(secretKey.getEncoded());  
+        Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);  
+        cipher.init(Cipher.ENCRYPT_MODE, key,iv);  
+        return cipher.doFinal(str_bytes);
+	}
+	
+	
+	//Decrypt the cipher
+	public byte[] doDec(byte[] content, SecretKey secretKey, IvParameterSpec iv) throws Exception
+	{
+		 Key key = convertToKey(secretKey.getEncoded());  
+	     Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);  
+	     cipher.init(Cipher.DECRYPT_MODE, key,iv);  
+	     return cipher.doFinal(content);
+		
+	}
+}

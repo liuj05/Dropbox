@@ -1,0 +1,44 @@
+package CS6348FinalProject.proj;
+import javax.crypto.*;
+import javax.crypto.spec.SecretKeySpec;
+
+import java.io.*;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.security.*;
+import java.util.Arrays;
+import java.util.Base64;
+
+public class AESEncryption {
+	
+	//encryption key
+	public static SecretKey key;
+	
+	//generate key for encryption
+	public static SecretKey generateKey() throws NoSuchAlgorithmException, IOException
+	{
+	    KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
+	    keyGenerator.init(256); 
+	    key = keyGenerator.generateKey();
+	    System.out.println(key);
+	    return key;
+	}
+	
+	//convert to byte string for store in the file
+	public static String saveKey() throws UnsupportedEncodingException
+	{
+		String store_key = Base64.getEncoder().encodeToString(key.getEncoded());
+		System.out.println(store_key);
+		
+		return store_key;
+	}
+	
+	//restore key
+	public static SecretKey restoreKey(String store_key) throws UnsupportedEncodingException
+	{
+		byte[] decodedKey = Base64.getDecoder().decode(store_key);
+		SecretKey key_restore = new SecretKeySpec(decodedKey, 0, decodedKey.length, "AES");
+		System.out.println(key_restore);
+		return key_restore;
+	}
+}

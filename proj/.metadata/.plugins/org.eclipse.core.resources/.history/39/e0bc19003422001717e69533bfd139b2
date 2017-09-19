@@ -1,0 +1,83 @@
+package CS6348FinalProject.proj;
+import javax.crypto.*;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+
+import java.io.*;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.security.*;
+import java.util.Arrays;
+import java.util.Base64;
+
+public class AESEncryption {
+	
+	
+	//generate key for encryption
+	//return the key for encryption
+	public static SecretKey generateKey() throws NoSuchAlgorithmException, IOException
+	{
+	    KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
+	    keyGenerator.init(128); 
+	    SecretKey key = keyGenerator.generateKey();
+	    System.out.println(key);
+	    return key;
+	}
+	
+	//convert to byte string for store in the file
+	//return string that is able to restore to SecretKey
+	public static String saveKey(SecretKey sk) throws UnsupportedEncodingException
+	{
+		String store_key = Base64.getEncoder().encodeToString(sk.getEncoded());
+		System.out.println(store_key);
+		
+		return store_key;
+	}
+	
+	//restore key
+	//return secret key for encryption
+	public static SecretKey restoreKey(String store_key) throws UnsupportedEncodingException
+	{
+		byte[] decodedKey = Base64.getDecoder().decode(store_key);
+		SecretKey key_restore = new SecretKeySpec(decodedKey, 0, decodedKey.length, "AES");
+		System.out.println(key_restore);
+		
+		return key_restore;
+	}
+	
+	//get iv
+	//return iv value
+	public IvParameterSpec get_iv()
+	{
+		 int ivSize = 16;
+	     byte[] iv = new byte[ivSize];
+	     SecureRandom random = new SecureRandom();
+	     random.nextBytes(iv);
+	     IvParameterSpec ivParameterSpec = new IvParameterSpec(iv);
+	     return ivParameterSpec;
+	}
+	
+	//encrypt file 
+	public String doEnc(String strToEncrypt) throws NoSuchAlgorithmException, NoSuchPaddingException, IOException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException
+	{
+		Cipher c = Cipher.getInstance("AES/CBC/PKCS5PADDING");
+		IvParameterSpec iv = get_iv();
+		SecretKey secretKey = generateKey();
+
+		byte[] enCodeFormat = secretKey.getEncoded();
+        SecretKeySpec secretKeySpec = new SecretKeySpec(enCodeFormat, "AES");
+        Cipher cipher = Cipher.getInstance("AES");
+        byte[] byteContent = strToEncrypt.getBytes("utf-8");
+        cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec);
+        byte[] byteRresult = cipher.doFinal(byteContent);
+        StringBuffer sb = new StringBuffer();
+        for (int i = 0; i < byteRresult.length; i++) {
+            String hex = Integer.toHexString(byteRresult[i] & 0xFF);
+            if (hex.length() == 1) {
+                hex = '0' + hex;
+            }
+            sb.append(hex.toUpperCase());
+        }
+        return sb.toString();
+	}
+}
